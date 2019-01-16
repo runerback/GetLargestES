@@ -63,13 +63,14 @@
                 <Setter Property="BorderThickness" Value="1" />
                 <Setter TargetName="PART_Point" Property="Fill" Value="{Binding SelectionPointStroke, Mode=OneWay, RelativeSource={RelativeSource AncestorType=local:PointSetPresenter}}" />
             </DataTrigger>
-            <EventTrigger RoutedEvent="MouseEnter">
+            <!--<EventTrigger RoutedEvent="MouseEnter">
                 <BeginStoryboard>
                     <Storyboard
                         Storyboard.TargetName="PART_Label"
                         Storyboard.TargetProperty="Opacity">
                         <DoubleAnimation
                             To="1"
+                            BeginTime="0:0:1"
                             Duration="0:0:1"
                             />
                     </Storyboard>
@@ -100,7 +101,7 @@
                             />
                     </Storyboard>
                 </BeginStoryboard>
-            </EventTrigger>
+            </EventTrigger>-->
         </ControlTemplate.Triggers>
     </ControlTemplate>
 

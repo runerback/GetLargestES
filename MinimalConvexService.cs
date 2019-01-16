@@ -80,33 +80,29 @@ namespace GetLargestES
             SetConvexPathData(source, geometry);
         }
 
-        IEnumerable<PointData> CalculateMinimalConvex(PointData[] points)
+        PointData[] CalculateMinimalConvex(PointData[] points)
         {
             var count = points?.Length ?? 0;
             if (count < 3)
-                yield break;
+                return null;
             
-            //calculate
-
-            //step one: find the point with lowest y and lowest x
-            var P = points
+            var p0 = points
                 .OrderBy(item => item.Point.Y)
-                .OrderBy(item => item.Point.X)
+                .ThenBy(item => item.Point.X)
                 .First();
-
-            var right = new Vector(1, 0);
-            var others = OrderByAngle(
-                points.Where(item => item.Index != P.Index), P.Point)
-                .ToArray();
-            
-            var stack = new Stack<PointData>();
-            stack.Push(P);
-            stack.Push(others[0]);
-            stack.Push(others[1]);
-
-            for (int i = 2, j = count - 1; i < j;)
+            if (p0.Index > 0)
             {
-                var item3 = others[i];
+                for (int i = p0.Index - 1; i >= 0; i--)
+                    points[i + 1] = points[i];
+                points[0] = p0;
+            }
+
+            points = SortByAngle(points);
+
+            var stack = new Stack<PointData>(points.Take(2));
+            for (int i = 2, j = count; i < j && stack.Count >= 2;)
+            {
+                var item3 = points[i];
                 var item2 = stack.Pop();
                 var item1 = stack.Peek();
 
@@ -116,45 +112,48 @@ namespace GetLargestES
 
                 var dir = (p2.X - p1.X) * (p3.Y - p1.Y) - (p2.Y - p1.Y) * (p3.X - p1.X);
                 if (dir > 0)
+                {
                     stack.Push(item2);
-                else
-                    item2.ToggleCheckedState();
-
-                stack.Push(item3);
-                i++;
+                    stack.Push(item3);
+                    i++;
+                }
             }
 
-            while (stack.Count > 0)
-                yield return stack.Pop();
+            if (stack.Count < 3)
+                return null;
+            return stack.ToArray();
         }
 
-        IEnumerable<PointData> OrderByAngle(IEnumerable<PointData> source, Point basePoint)
+        PointData[] SortByAngle(PointData[] points)
         {
-            foreach (var group in source
+            var basePoint = points[0].Point;
+            List<PointData> result = new List<PointData>(points.Length);
+            result.Add(points[0]);
+
+            foreach (var group in points
+                .Skip(1)
                 .GroupBy(item => item.Point.X.CompareTo(basePoint.X))
                 .OrderByDescending(item => item.Key))
             {
-                switch (group.Key)
-                {
-                    case 0:
-                        foreach (var item in group.OrderBy(item => item.Point.Y))
-                            yield return item;
-                        break;
-                    default:
-                        foreach (var item in group.OrderBy(item =>
-                        {
-                            var p = item.Point;
-                            return (p.Y - basePoint.Y) / Math.Abs(p.X - basePoint.X);
-                        }))
-                            yield return item;
-                        break;
-                }
+                IEnumerable<PointData> sorted;
+                if (group.Key == 0)
+                    sorted = group.OrderBy(item => item.Point.Y);
+                else
+                    sorted = group.OrderBy(item =>
+                    {
+                        var p = item.Point;
+                        return (p.Y - basePoint.Y) / (p.X - basePoint.X);
+                    });
+
+                result.AddRange(sorted);
             }
+
+            return result.ToArray();
         }
 
         PathFigure GenerateRootFigure(PointData[] points, Func<PointData, PointPresenter> itemContainerSelector)
         {
-            var orderedPoints = CalculateMinimalConvex(points).ToArray();
+            var orderedPoints = CalculateMinimalConvex(points);
             var count = orderedPoints?.Length ?? 0;
             if (count < 3)
                 return null;

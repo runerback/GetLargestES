@@ -46,7 +46,7 @@ namespace GetLargestES
 
         public override string ToString()
         {
-            return point.ToString();
+            return $"p{index} ({point})";
         }
     }
 }
