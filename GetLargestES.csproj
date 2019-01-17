@@ -92,7 +92,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="AxisPresenter.cs" />
+    <Compile Include="CommandService.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="FarthestPairService.cs" />
+    <Compile Include="ICommands.cs" />
     <Compile Include="MinimalConvexService.cs" />
     <Compile Include="PointCanvas.cs" />
     <Compile Include="MainWindow.xaml.cs">
