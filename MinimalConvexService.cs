@@ -97,7 +97,7 @@ namespace GetLargestES
                 points[0] = p0;
             }
 
-            points = SortByAngle(points);
+            SortByAngle(points);
 
             var stack = new Stack<PointData>(points.Take(2));
             for (int i = 2, j = count; i < j && stack.Count >= 2;)
@@ -124,15 +124,26 @@ namespace GetLargestES
             return stack.ToArray();
         }
 
-        PointData[] SortByAngle(PointData[] points)
+        void SortByAngle(PointData[] points)
         {
-            var basePoint = points[0].Point;
-            List<PointData> result = new List<PointData>(points.Length);
-            result.Add(points[0]);
+            var basePoint = points[0];
+            var baseIndex = basePoint.Index;
+            var p0 = basePoint.Point;
+            
+            var indexMap = new Dictionary<PointData, int>();
+            for (int i = 1, j = points.Length; i < j; i++)
+            {
+                var point = points[i];
+                if (point.Index < baseIndex)
+                    indexMap.Add(point, point.Index + 1);
+                else
+                    indexMap.Add(point, point.Index);
+            }
 
+            var sortingIndex = 0;
             foreach (var group in points
                 .Skip(1)
-                .GroupBy(item => item.Point.X.CompareTo(basePoint.X))
+                .GroupBy(item => item.Point.X.CompareTo(p0.X))
                 .OrderByDescending(item => item.Key))
             {
                 IEnumerable<PointData> sorted;
@@ -142,13 +153,28 @@ namespace GetLargestES
                     sorted = group.OrderBy(item =>
                     {
                         var p = item.Point;
-                        return (p.Y - basePoint.Y) / (p.X - basePoint.X);
+                        return (p.Y - p0.Y) / (p.X - p0.X);
                     });
 
-                result.AddRange(sorted);
+                foreach (var sortedItem in sorted)
+                {
+                    sortingIndex++;
+
+                    var originItem = points[sortingIndex];
+                    if (sortedItem == originItem)
+                        continue;
+
+                    var sortedItemIndex = indexMap[sortedItem];
+
+                    points[sortingIndex] = sortedItem;
+                    points[sortedItemIndex] = originItem;
+
+                    indexMap[sortedItem] = sortingIndex;
+                    indexMap[originItem] = sortedItemIndex; 
+                }
             }
 
-            return result.ToArray();
+            indexMap = null;
         }
 
         PathFigure GenerateRootFigure(PointData[] points, Func<PointData, PointPresenter> itemContainerSelector)
