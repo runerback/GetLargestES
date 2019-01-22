@@ -148,15 +148,15 @@
                     Stroke="{TemplateBinding ConvexStroke}"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch" 
-                    Data="{Binding Path=(local:MinimalConvexService.ConvexPathData), Mode=OneWay, ElementName=PART_PointBoard}"
+                    Data="{Binding Path=(local:ConvexHullService.ConvexPathData), Mode=OneWay, ElementName=PART_PointBoard}"
                     />
                 <local:PointCanvas
                     x:Name="PART_PointBoard"
                     Margin="{StaticResource PointBoardMargin}"
-                    Cursor="{TemplateBinding Cursor}"
-                    ItemsSource="{TemplateBinding Points}">
+                    Cursor="{TemplateBinding Cursor}">
                     <i:Interaction.Behaviors>
-                        <local:MinimalConvexService />
+                        <local:ConvexHullService />
+                        <local:ShortcutKeyService />
                     </i:Interaction.Behaviors>
                 </local:PointCanvas>
                 <local:AxisPresenter 

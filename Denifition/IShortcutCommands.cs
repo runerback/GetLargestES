@@ -7,7 +7,7 @@ using System.Windows.Input;
 
 namespace GetLargestES
 {
-    interface ICommands
+    interface IShortcutCommands
     {
         ICommand RemoveSelectionCommand { get; }
         ICommand SelectAllCommand { get; }

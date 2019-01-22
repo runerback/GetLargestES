@@ -36,12 +36,19 @@ namespace GetLargestES
         public bool IsChecked
         {
             get { return isChecked; }
+            set
+            {
+                if (value != isChecked)
+                {
+                    isChecked = value;
+                    NotifyPropertyChanged(nameof(IsChecked));
+                }
+            }
         }
 
         public void ToggleCheckedState()
         {
-            isChecked = !isChecked;
-            NotifyPropertyChanged(nameof(IsChecked));
+            IsChecked = !isChecked;
         }
 
         public override string ToString()

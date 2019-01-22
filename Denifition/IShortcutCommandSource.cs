@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace GetLargestES
 {
-    class FarthestPairService
+    interface IShortcutCommandSource
     {
+        void RemoveSelection();
+        void SelectAll();
+        void Reset();
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Runerback.Utils.Wpf;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -12,8 +13,13 @@ using System.Windows.Shapes;
 
 namespace GetLargestES
 {
-    sealed class MinimalConvexService : Behavior<PointCanvas>
+    sealed class ConvexHullService : Behavior<PointCanvas>
     {
+        public ConvexHullService()
+        {
+            builder = new ConvexHullBuilder(this);
+        }
+
         #region ConvexPathData
 
         public static Geometry GetConvexPathData(PointCanvas d)
@@ -30,7 +36,7 @@ namespace GetLargestES
             DependencyProperty.RegisterAttachedReadOnly(
                 "ConvexPathData",
                 typeof(Geometry),
-                typeof(MinimalConvexService),
+                typeof(ConvexHullService),
                 new PropertyMetadata());
 
         public static readonly DependencyProperty ConvexPathDataProperty =
@@ -54,7 +60,7 @@ namespace GetLargestES
             DependencyProperty.RegisterAttachedReadOnly(
                 "ConvexHull",
                 typeof(IEnumerable<PointData>),
-                typeof(MinimalConvexService),
+                typeof(ConvexHullService),
                 new PropertyMetadata());
 
         public static readonly DependencyProperty ConvexHullProperty =
@@ -62,15 +68,12 @@ namespace GetLargestES
 
         #endregion ConvexHull
 
-        private readonly ObservableCollection<PointData> convexHull = 
-            new ObservableCollection<PointData>();
-
         protected override void OnAttached()
         {
             var target = AssociatedObject;
 
             SetConvexPathData(target, new PathGeometry());
-            SetConvexHull(target, convexHull);
+            SetConvexHull(target, builder.ConvexHull);
 
             target.ItemsChanged += OnItemsChanged;
         }
@@ -84,29 +87,47 @@ namespace GetLargestES
             SetConvexHull(target, null);
         }
 
+        private readonly ConvexHullBuilder builder;
+
         private void OnItemsChanged(object sender, EventArgs e)
         {
-            new ConvexHullPathBuilder().Build((PointCanvas)sender);
+            builder.Build();
         }
         
-        sealed class ConvexHullPathBuilder
+        sealed class ConvexHullBuilder
         {
-            public void Build(PointCanvas source)
+            public ConvexHullBuilder(ConvexHullService host)
             {
-                SetConvexPathData(source, null);
+                this.host = host ?? throw new ArgumentNullException(nameof(host));
+            }
 
-                var points = source.ItemsSource.OfType<PointData>().ToArray();
+            private readonly ConvexHullService host;
 
+            private readonly AutoInvokeObservableCollection<PointData> convexHull =
+                new AutoInvokeObservableCollection<PointData>();
+            public IEnumerable<PointData> ConvexHull => convexHull;
+            
+            public void Build()
+            {
+                var hull = convexHull;
+                 var source = host.AssociatedObject;
+
+                var points = source.Points.ToArray();
                 var orderedPoints = CalculateMinimalConvex(points);
                 var count = orderedPoints?.Length ?? 0;
                 if (count < 3)
+                {
+                    SetConvexPathData(source, null);
+                    hull.Reset(Enumerable.Empty<PointData>());
                     return;
+                }
 
-                var hull = (ICollection<PointData>)GetConvexHull(source);
-                hull.Clear();
-                foreach (var item in orderedPoints)
-                    hull.Add(item);
+                if (hull.Select(item => item.Index).SequenceEqual(
+                    orderedPoints.Select(item => item.Index)))
+                    return;
                 
+                hull.Reset(orderedPoints);
+
                 var geometry = new PathGeometry();
                 var figure = GenerateRootFigure(orderedPoints, source.FindContainer);
                 geometry.Figures.Add(figure);
@@ -211,7 +232,7 @@ namespace GetLargestES
                 indexMap = null;
             }
 
-            PathFigure GenerateRootFigure(PointData[] orderedPoints, Func<PointData, PointPresenter> itemContainerSelector)
+            PathFigure GenerateRootFigure(PointData[] orderedPoints, Func<PointData, UIElement> itemContainerSelector)
             {
                 var figure = new PathFigure { IsClosed = true };
 
