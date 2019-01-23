@@ -113,7 +113,7 @@ namespace GetLargestES
                  var source = host.AssociatedObject;
 
                 var points = source.Points.ToArray();
-                var orderedPoints = CalculateMinimalConvex(points);
+                var orderedPoints = CalculateMinimalConvex(points); //counter-clockwise
                 var count = orderedPoints?.Length ?? 0;
                 if (count < 3)
                 {

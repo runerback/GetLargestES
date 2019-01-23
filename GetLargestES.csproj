@@ -130,6 +130,7 @@
     <Compile Include="Controls\Utils\PositionExtension.cs" />
     <Compile Include="Controls\PointPresenter.cs" />
     <Compile Include="Controls\PointSetPresenter.cs" />
+    <Compile Include="Model\PointPair.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

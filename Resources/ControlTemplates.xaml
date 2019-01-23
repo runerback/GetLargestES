@@ -156,6 +156,7 @@
                     Cursor="{TemplateBinding Cursor}">
                     <i:Interaction.Behaviors>
                         <local:ConvexHullService />
+                        <local:FarthestPairService />
                         <local:ShortcutKeyService />
                     </i:Interaction.Behaviors>
                 </local:PointCanvas>
